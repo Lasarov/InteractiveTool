@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Experiment Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply Inter font globally */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+
+        /* --- Modern UI Styles (Refined for Google Design feel) --- */
+        .choice-button {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #e5e7eb; /* Lighter border */
+            display: flex;
+            align-items: center;
+            background-color: #ffffff; /* White background */
+        }
+        .choice-button:hover {
+            border-color: #d1d5db;
+            background-color: #f9fafb;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* Softer shadow */
+        }
+         .choice-button:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+             background-color: #f9fafb;
+         }
+         /* Specific styles for selected states */
+         .choice-button.selected-correct {
+            border-color: #10b981; /* Emerald */
+            background-color: #ecfdf5; /* Lighter Emerald */
+            box-shadow: 0 0 0 1px #10b981; /* Ring effect */
+         }
+          .choice-button.selected-incorrect {
+            border-color: #ef4444; /* Red */
+            background-color: #fef2f2; /* Lighter Red */
+            box-shadow: 0 0 0 1px #ef4444; /* Ring effect */
+         }
+         .choice-button.correct-answer-highlight {
+             background-color: #d1fae5;
+             border-color: #10b981;
+         }
+
+        .feedback-correct {
+            border-left: 4px solid #10b981;
+            background-color: #f0fdf4;
+            color: #065f46;
+        }
+        .feedback-incorrect {
+            border-left: 4px solid #ef4444;
+            background-color: #fef2f2;
+            color: #b91c1c;
+        }
+        .slide-in {
+            animation: slide-in 0.4s ease-out forwards;
+        }
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .choice-icon {
+            width: 1.1em; height: 1.1em; margin-right: 0.6em; opacity: 0.7;
+         }
+        .game-container-max-width {
+            max-width: 768px;
+        }
+
+        /* --- 90s Pixel Art Element Style (Unchanged) --- */
+        .pixel-art-container { margin-right: 1rem; flex-shrink: 0; }
+        .pixel-computer { width: 48px; height: 40px; position: relative; image-rendering: pixelated; }
+        .pixel-computer::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 8px; height: 8px;
+            box-shadow:
+                0px 0px 0 #808080, 8px 0px 0 #808080, 16px 0px 0 #808080, 24px 0px 0 #808080, 32px 0px 0 #808080, 40px 0px 0 #808080,
+                0px 8px 0 #808080, 40px 8px 0 #808080, 0px 16px 0 #808080, 40px 16px 0 #808080, 0px 24px 0 #808080, 40px 24px 0 #808080,
+                0px 32px 0 #808080, 8px 32px 0 #808080, 16px 32px 0 #808080, 24px 32px 0 #808080, 32px 32px 0 #808080, 40px 32px 0 #808080,
+                8px 8px 0 #000080, 16px 8px 0 #000080, 24px 8px 0 #000080, 32px 8px 0 #000080,
+                8px 16px 0 #000080, 16px 16px 0 #000080, 24px 16px 0 #000080, 32px 16px 0 #000080,
+                8px 24px 0 #000080, 16px 24px 0 #000080, 24px 24px 0 #000080, 32px 24px 0 #000080;
+        }
+        /* Style for debriefing section */
+        .debrief-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb; /* Light separator */
+            font-size: 0.9em; /* Slightly smaller text */
+            text-align: left;
+        }
+        .debrief-section h4 {
+            font-weight: 600; /* Semibold */
+            margin-bottom: 0.5rem;
+            color: #374151; /* Gray 700 */
+        }
+         .debrief-section ul {
+            list-style: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+         .debrief-section li {
+             margin-bottom: 0.25rem;
+         }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+
+    <header class="bg-white shadow-sm mb-6 md:mb-8">
+        <nav class="container mx-auto px-4 sm:px-6 py-3">
+            <div class="flex items-center space-x-2">
+                 <svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875S10.5 3.09 10.5 4.125c0 .369.128.713.349 1.003.215.283.401.604.401.959v0a.64.64 0 0 1-.657.643 48.39 48.39 0 0 1-4.163-.3c.186 1.613.293 3.25.375 4.908a.636.636 0 0 1-.638.637 48.04 48.04 0 0 1-4.235-.37c-.832-8.497-1.734-16.59-2.28-24.507.027-.004.055-.008.083-.011a.636.636 0 0 1 .637.636v.006c.546 7.917 1.448 16.01 2.28 24.507a1.17 1.17 0 0 1-.637.637c-1.4.157-2.855.271-4.324.349a.636.636 0 0 1-.638-.636 48.04 48.04 0 0 1-.37-4.235.636.636 0 0 1 .637-.638 48.39 48.39 0 0 1-.3-4.163.64.64 0 0 1 .643-.657v0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 15.388c0-.355-.186-.676-.401-.959-.221-.29-.349-.634-.349-1.003 0-1.035 1.008-1.875 2.25-1.875s2.25.84 2.25 1.875c0 .369-.128.713-.349 1.003-.215.283-.401.604-.401.959v0a.64.64 0 0 0 .657.643 48.39 48.39 0 0 0 4.163-.3c-.186 1.613-.293 3.25-.375 4.908a.636.636 0 0 0 .638.637 48.04 48.04 0 0 0 4.235-.37c.832 8.497 1.734 16.59 2.28 24.507-.027.004-.055-.008-.083.011a.636.636 0 0 0-.637.636v-.006c-.546-7.917-1.448-16.01-2.28-24.507a1.17 1.17 0 0 0 .637-.637c1.4-.157 2.855.271 4.324-.349a.636.636 0 0 0 .638-.636 48.04 48.04 0 0 0 .37-4.235.636.636 0 0 0-.637-.638 48.39 48.39 0 0 0 .3-4.163.64.64 0 0 0-.643-.657v0Z" /></svg>
+                 <h1 class="text-lg sm:text-xl font-semibold text-gray-700">Business Experiment Game</h1>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4">
+         <div id="game-container" class="game-container-max-width mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg w-full">
+             <div class="flex items-start mb-5 border-b border-gray-200 pb-4">
+                 <div class="pixel-art-container mt-1">
+                     <div class="pixel-computer"></div>
+                 </div>
+                <h2 id="scenario-title" class="text-lg sm:text-xl font-semibold text-gray-900 flex-grow">Loading...</h2>
+             </div>
+
+            <div id="scenario-description" class="mb-6 text-gray-600 text-base leading-relaxed">
+                Loading game scenario...
+            </div>
+
+            <div id="question-container" class="mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden">
+                <div id="question" class="font-medium text-base sm:text-lg text-gray-800"></div>
+            </div>
+
+            <div id="choices" class="grid grid-cols-1 gap-3">
+                </div>
+
+            <div id="feedback" class="mt-6 p-4 rounded-lg text-base hidden"></div>
+
+            <div id="navigation" class="mt-8 pt-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="restart-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-5 rounded-lg border border-gray-300 transition duration-150 ease-in-out hidden">Restart</button>
+                <button id="next-button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-lg shadow-sm transition duration-150 ease-in-out hidden">Next</button>
+            </div>
+
+            <div id="score-display" class="mt-5 text-right text-sm text-gray-500">Score: <span id="score" class="font-semibold">0</span></div>
+        </div>
+    </main>
+
+    <footer class="text-center text-gray-500 text-xs py-6 mt-10">
+         &copy; 2025 Business Experiment Simulation
+    </footer>
+
+
+    <script>
+        // --- SVG Icon for Choices (Modern Style) ---
+        const choiceIconSVG = `<svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>`;
+
+        // --- Game Data (Updated Appeals: Feel Good vs. New Habit) ---
+        let scenarios = [ // Use let to allow modification for tracking
+             {
+                id: "ecoSparkAppealTest", // Changed ID slightly
+                title: "EcoSpark Appeal Test!", // Updated title
+                // Updated description for new appeals
+                description: "You're the Marketing Manager for EcoSpark. The standard 'Buy Sustainable!' message isn't cutting it – CTRs are flat, and the VP wants fresh ideas. Inspired by behavioral science, you wonder: would focusing on the immediate pleasure ('Feel Good!') outperform an appeal focused on long-term change ('New Eco Habit!')? It's time to experiment with psychology!",
+                steps: [
+                    {
+                        topic: "Problem Definition",
+                        // Updated question context
+                        question: "Step 1: Define the Marketing Research Problem. The VP wants a clear target. What *specific* question MUST this experiment answer about these new psychological angles?",
+                        choices: [
+                            // Updated choices to reflect new appeals
+                            { text: "How can we make sustainability seem more fun overall?", correct: false, feedback: "Too broad! We need to compare the effectiveness of the two *specific* new appeals. (Ref: MarketStudy_S5, Pg 18)" },
+                            { text: "Should we change the product design to be more appealing?", correct: false, feedback: "That's a different experiment! This one focuses strictly on the *advertising message* appeal. (Ref: MarketStudy_S5, Pg 18)" },
+                            { text: "Determine if a 'Feel Good' (Hedonic) ad appeal generates a higher CTR than a 'New Eco Habit' (Habit Formation) ad appeal.", correct: true, feedback: "Precisely! This targets the core uncertainty: which psychological angle drives clicks? Focused and actionable. (Ref: MarketStudy_S5, Pg 19)" },
+                            { text: "What psychological principles drive consumer behavior?", correct: false, feedback: "Interesting, but too academic for this specific business problem. We need to test the *application* of principles via the ads." }
+                        ],
+                        playerAnswerCorrect: null
+                    },
+                    {
+                        topic: "IV/DV Identification",
+                        // Updated question context
+                        question: "Step 2: Identify Variables. Let's get technical. What's the key cause (IV) you're manipulating and the key effect (DV) you're measuring in this test?",
+                        choices: [
+                            // Updated choices
+                            { text: "IV: Click-Through Rate (CTR), DV: Ad Appeal Type ('Feel Good' vs 'New Habit')", correct: false, feedback: "Incorrect. You measure the CTR (DV) *because* you changed the Ad Appeal (IV). IV causes DV. (Ref: Session8, Pg 23)" },
+                            { text: "IV: Ad Appeal Type ('Feel Good' vs 'New Habit'), DV: Click-Through Rate (CTR)", correct: true, feedback: "Spot on! You control/manipulate the Ad Appeal (IV) to see its direct effect on CTR (DV). (Ref: Session8, Pg 24)" },
+                            { text: "IV: User Psychology, DV: Brand Loyalty", correct: false, feedback: "These are related concepts, but not the specific, operationalized variables being directly tested in *this* A/B test of ad messages." },
+                            { text: "IV: Ad Copy Length, DV: Ad Appeal Type", correct: false, feedback: "Ad copy length could be another IV, but here you're testing the *type* of appeal, and measuring the CTR." }
+                        ],
+                         playerAnswerCorrect: null
+                    },
+                     {
+                        topic: "Hypothesis Formulation",
+                        // Updated question context
+                        question: "Step 3: Formulate a Hypothesis (H). Which psychological angle do you predict will win? State your testable hypothesis clearly.",
+                        choices: [
+                            // Updated choices (Assuming 'Feel Good' might be hypothesized as better for immediate clicks)
+                            { text: "H: Psychological appeals impact user engagement.", correct: false, feedback: "Too vague. A good hypothesis predicts the *direction* of the difference based on theory or intuition. (Ref: MarketStudy_S5, Pg 27)" },
+                            { text: "H: The 'Feel Good' (Hedonic) appeal will achieve a significantly higher CTR compared to the 'New Eco Habit' appeal.", correct: true, feedback: "Excellent hypothesis! It's specific, directional, and directly testable. It posits that immediate gratification might drive more clicks. (Ref: MarketStudy_S5, Pg 28)" },
+                            { text: "H: EcoSpark users prefer positive emotions.", correct: false, feedback: "This might be true, but it's not the specific, testable hypothesis comparing the *CTR* of the two *ad appeals*." },
+                            { text: "H: Habit formation messaging is complex.", correct: false, feedback: "An observation, perhaps, but not a testable hypothesis about the *relative effectiveness* of the two appeals on CTR." }
+                        ],
+                         playerAnswerCorrect: null
+                    },
+                    {
+                        topic: "Experimental Design Choice",
+                        // Question context remains similar
+                        question: "Step 4: Choose the Experimental Design. Resources are tight; we need reliable results. How will you scientifically test these two ad versions online?",
+                        choices: [
+                            // Choices remain structurally the same, just ensure wording fits
+                            { text: "Show 'New Eco Habit' for a week, then 'Feel Good' for a week, and compare weekly CTRs.", correct: false, feedback: "Risky! Time-based differences could confound results. This lacks randomization and control. (Ref: Session8, Pg 28 - Randomization)" },
+                            { text: "Run focus groups asking participants which appeal resonates more.", correct: false, feedback: "Focus groups give qualitative 'why', but don't reliably predict click behavior. We need quantitative click data. (Ref: MarketStudy_S5, Page 48)" },
+                            { text: "Randomly assign website visitors to see either the 'New Eco Habit' ad (Group A) or the 'Feel Good' ad (Group B) simultaneously and compare CTRs.", correct: true, feedback: "The gold standard! A randomized controlled trial (A/B test) isolates the effect of the ad appeal by comparing two comparable groups. Defensible results! (Ref: Session8, Pg 27-29)" },
+                            { text: "Only show the 'Feel Good' ad to returning visitors.", correct: false, feedback: "This isn't a controlled comparison. You need a control group ('New Eco Habit') shown to a similar audience simultaneously to establish causality." }
+                        ],
+                         playerAnswerCorrect: null
+                    },
+                    {
+                        topic: "Moderator Identification",
+                        // Updated question context and moderator
+                        question: "Step 5: Consider Potential Moderators. Think about the audience. What underlying user characteristic might cause the *effect* of these psychological appeals to differ?",
+                        choices: [
+                            // Updated choices for new moderator
+                            { text: "The user's device type (Mobile vs. Desktop).", correct: false, feedback: "This is likely an extraneous variable or segment, not something that fundamentally changes *how* these specific psychological appeals resonate differently based on personality. (Ref: Session9, Pg 13)" },
+                            { text: "User's Primary Motivation (e.g., Personal Growth vs. Immediate Pleasure).", correct: true, feedback: "Excellent moderator! Users focused on self-improvement might respond better to 'New Eco Habit', while others prefer 'Feel Good', changing the main effect's strength/direction. (Ref: Session9, Pg 5-7)" },
+                            { text: "The day of the week the ad is shown.", correct: false, feedback: "This affects overall traffic patterns perhaps, but doesn't explain *why* one appeal might work better for certain *types* of individuals than others." },
+                            { text: "The user's age group.", correct: false, feedback: "Age *could* correlate with the proposed motivations, but 'Primary Motivation' is a more direct potential moderator for these specific appeals." }
+                        ],
+                         playerAnswerCorrect: null
+                    },
+                     {
+                        topic: "Validity Assessment",
+                        // Question context remains similar
+                        question: "Step 6: Validity Check. Okay, the test is running live on the EcoSpark site. What type of experiment is this, acknowledging its strengths and weaknesses?",
+                        choices: [
+                            // Choices remain the same
+                            { text: "A Laboratory Experiment (high control).", correct: false, feedback: "Incorrect. Lab experiments are artificial. Running it live makes it a Field Experiment. (Ref: Session9, Pg 25-26 & Session11, Pages 8-9)" },
+                            { text: "A Field Experiment (real-world setting).", correct: true, feedback: "Correct! It's in a naturalistic setting (your website), maximizing external validity (realism) but potentially facing more 'noise' (lower internal validity). (Ref: Session9, Pg 25-26 & Session11, Pages 8-9)" },
+                            { text: "A Correlational Study (observing relationships).", correct: false, feedback: "Incorrect. Because you are *manipulating* the ad appeal (IV) and using *random assignment*, this is designed to test causality, not just correlation." },
+                             { text: "A Secondary Data Analysis.", correct: false, feedback: "Incorrect. You are collecting *new*, primary data through the live A/B test. (Ref: MarketStudy_S5, Page 63 - Primary vs Secondary)" }
+                        ],
+                         playerAnswerCorrect: null
+                    },
+                    {
+                        topic: "Results Interpretation",
+                        // Updated question context and results summary
+                        question: "Step 7: Interpreting (Simulated) Results. The data is in! 'Feel Good' CTR: 4.8%, 'New Eco Habit' CTR: 3.5% (Statistically significant). What's the most accurate conclusion to present?",
+                        choices: [
+                            // Updated choices to match new appeals
+                            { text: "The 'Feel Good' appeal is clearly the winner for all customers. Switch immediately.", correct: false, feedback: "Too hasty! While better overall, remember the potential moderator (User Motivation)? A segmented approach might be optimal. Don't ignore nuances." },
+                            { text: "The experiment shows 'New Eco Habit' messaging doesn't work.", correct: false, feedback: "Not necessarily 'doesn't work', just *less* effective than 'Feel Good' at driving clicks *in this context*. It might work for specific segments or goals (like long-term engagement)." },
+                            { text: "In this experiment, the 'Feel Good' ad appeal *caused* a significantly higher CTR than the 'New Eco Habit' appeal among the tested website visitors.", correct: true, feedback: "Correct and precise. The experimental design allows for this causal inference for the audience tested. This is the key takeaway. (Ref: MarketStudy_S5, Pg 31 - Causation)" },
+                            { text: "There's a correlation between 'Feel Good' and higher CTR, but causality isn't proven.", correct: false, feedback: "Incorrect. The randomization and manipulation in the A/B test design *are* intended to establish causality, not just correlation. (Ref: MarketStudy_S5, Pg 34 - Requirements for Causality)" }
+                        ],
+                         playerAnswerCorrect: null
+                    }
+                ]
+            }
+            // Add more scenarios here following the same structure
+        ];
+
+        // --- Game State ---
+        let currentScenarioIndex = 0;
+        let currentStepIndex = 0;
+        let score = 0;
+        let scenarioData = null;
+
+        // --- DOM Elements ---
+        let scenarioTitleElement, scenarioDescriptionElement, questionElement, choicesElement, feedbackElement, nextButton, restartButton, scoreDisplay, gameContainer, questionContainer;
+
+         function getElements() {
+             scenarioTitleElement = document.getElementById('scenario-title');
+             scenarioDescriptionElement = document.getElementById('scenario-description');
+             questionElement = document.getElementById('question');
+             choicesElement = document.getElementById('choices');
+             feedbackElement = document.getElementById('feedback');
+             nextButton = document.getElementById('next-button');
+             restartButton = document.getElementById('restart-button');
+             scoreDisplay = document.getElementById('score');
+             gameContainer = document.getElementById('game-container');
+             questionContainer = document.getElementById('question-container');
+
+             nextButton.removeEventListener('click', nextStep);
+             nextButton.addEventListener('click', nextStep);
+             restartButton.removeEventListener('click', startGame);
+             restartButton.addEventListener('click', startGame);
+         }
+
+        // --- Game Logic ---
+
+        function startGame() {
+            if (!scenarioTitleElement) { console.error("DOM elements not found during startGame!"); return; }
+            scenarios.forEach(scenario => { scenario.steps.forEach(step => { step.playerAnswerCorrect = null; }); });
+            currentScenarioIndex = 0;
+            currentStepIndex = 0;
+            score = 0;
+            updateScoreDisplay();
+            loadScenario(currentScenarioIndex);
+            restartButton.classList.add('hidden');
+            feedbackElement.classList.add('hidden');
+            questionContainer.classList.remove('hidden');
+            gameContainer.classList.remove('slide-in');
+        }
+
+        function loadScenario(index) {
+            if (!scenarioTitleElement) { console.error("DOM elements not found during loadScenario!"); return; }
+            if (index >= scenarios.length) { endGame(); return; }
+            scenarioData = scenarios[index];
+            currentStepIndex = 0;
+            scenarioTitleElement.textContent = scenarioData.title;
+            scenarioDescriptionElement.textContent = scenarioData.description;
+            gameContainer.classList.add('slide-in');
+            loadStep(currentStepIndex);
+        }
+
+        function loadStep(stepIndex) {
+             if (!questionContainer) { console.error("DOM elements not found during loadStep!"); return; }
+             if (!scenarioData || stepIndex >= scenarioData.steps.length) { currentScenarioIndex++; loadScenario(currentScenarioIndex); return; }
+            const step = scenarioData.steps[stepIndex];
+            questionElement.textContent = step.question;
+            choicesElement.innerHTML = '';
+            feedbackElement.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            questionContainer.classList.remove('hidden', 'slide-in');
+            const currentChoices = step.choices.slice(0, 4);
+            while (currentChoices.length < 4) { currentChoices.push({ text: `Missing Option ${currentChoices.length + 1}`, correct: false, feedback: "This option wasn't defined." }); }
+            const shuffledChoices = [...currentChoices].sort(() => Math.random() - 0.5);
+            shuffledChoices.forEach(choice => {
+                const button = document.createElement('button');
+                button.innerHTML = `${choiceIconSVG} <span class="flex-grow pl-2">${choice.text}</span>`;
+                button.classList.add('choice-button', 'w-full', 'text-gray-700', 'font-medium', 'text-sm', 'py-3', 'px-4', 'rounded-lg', 'shadow-sm', 'text-left');
+                button.onclick = () => handleChoice(choice, button, currentChoices, step);
+                choicesElement.appendChild(button);
+            });
+            void questionContainer.offsetWidth;
+            choicesElement.classList.remove('slide-in');
+            void choicesElement.offsetWidth;
+            questionContainer.classList.add('slide-in');
+            choicesElement.classList.add('slide-in');
+        }
+
+        function handleChoice(selectedChoice, selectedButton, allChoices, step) {
+            const buttons = choicesElement.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+            feedbackElement.innerHTML = selectedChoice.feedback;
+            feedbackElement.classList.remove('hidden', 'feedback-correct', 'feedback-incorrect');
+            feedbackElement.classList.add('p-4', 'rounded-lg', 'text-base');
+            buttons.forEach(btn => { btn.classList.remove('selected-correct', 'selected-incorrect', 'correct-answer-highlight'); });
+            if (selectedChoice.correct) {
+                feedbackElement.classList.add('feedback-correct');
+                selectedButton.classList.add('selected-correct');
+                score++;
+                updateScoreDisplay();
+                step.playerAnswerCorrect = true;
+            } else {
+                feedbackElement.classList.add('feedback-incorrect');
+                selectedButton.classList.add('selected-incorrect');
+                step.playerAnswerCorrect = false;
+                 buttons.forEach(btn => {
+                    const span = btn.querySelector('span');
+                    if (span) {
+                        const btnText = span.textContent;
+                        const choiceData = allChoices.find(c => c.text === btnText);
+                        if (choiceData && choiceData.correct) { btn.classList.add('correct-answer-highlight'); }
+                    }
+                });
+            }
+            feedbackElement.classList.remove('slide-in');
+            void feedbackElement.offsetWidth;
+            feedbackElement.classList.add('slide-in');
+            nextButton.classList.remove('hidden');
+        }
+
+        function nextStep() {
+            currentStepIndex++;
+            loadStep(currentStepIndex);
+        }
+
+         function updateScoreDisplay() {
+             if (scoreDisplay) {
+                const scoreSpan = scoreDisplay.querySelector('span#score');
+                if(scoreSpan) { scoreSpan.textContent = score; }
+             }
+         }
+
+        function endGame() {
+            const totalSteps = getTotalSteps();
+            const percentage = totalSteps > 0 ? Math.round((score / totalSteps) * 100) : 0;
+            let storyMessage = "";
+            if (percentage >= 85) { storyMessage = "Outstanding performance! Your sharp insights and rigorous approach turned the EcoSpark crisis around. The VP is thrilled and sees a bright future for data-driven decisions at the company. Promotion incoming?"; }
+            else if (percentage >= 50) { storyMessage = "Solid effort! You made some smart calls and navigated tricky experimental concepts. The EcoSpark campaign is showing signs of life, but the VP notes there's still room to sharpen your testing strategy for next time."; }
+            else { storyMessage = "A tough challenge! While you gave it a shot, several key experimental principles were missed, leading to questionable decisions. The EcoSpark campaign is still struggling, and the VP suggests a refresher course on experimental design."; }
+            let correctTopics = [];
+            let incorrectTopics = [];
+            scenarios.forEach(scenario => { scenario.steps.forEach(step => {
+                if (step.playerAnswerCorrect === true) { correctTopics.push(step.topic || 'Unnamed Topic'); }
+                else if (step.playerAnswerCorrect === false) { incorrectTopics.push(step.topic || 'Unnamed Topic'); }
+            }); });
+            const uniqueCorrect = [...new Set(correctTopics)];
+            const uniqueIncorrect = [...new Set(incorrectTopics)];
+            let debriefHtml = `<div class="debrief-section"><h4>Performance Debrief:</h4>`;
+            if (uniqueCorrect.length > 0) {
+                debriefHtml += `<p class="text-emerald-700 mb-1">Strong areas:</p><ul>`;
+                uniqueCorrect.forEach(topic => { debriefHtml += `<li>${topic}</li>`; });
+                debriefHtml += `</ul>`;
+            }
+             if (uniqueIncorrect.length > 0) {
+                debriefHtml += `<p class="text-red-700 mb-1">Areas for review:</p><ul>`;
+                uniqueIncorrect.forEach(topic => { debriefHtml += `<li>${topic}</li>`; });
+                debriefHtml += `</ul>`;
+            } else if (uniqueCorrect.length > 0) { debriefHtml += `<p class="text-gray-600">You aced all the concepts presented!</p>`; }
+            else { debriefHtml += `<p class="text-gray-600">Review the concepts to improve your experimental design skills.</p>`; }
+            debriefHtml += `</div>`;
+            scenarioTitleElement.textContent = "Experiment Challenge Complete!";
+            scenarioDescriptionElement.innerHTML = `
+                <div class="text-center text-lg font-medium text-gray-800">Congratulations!</div>
+                <div class="text-center mt-2 text-gray-600">You finished the challenge with a score of <span class="font-bold">${score}</span> out of ${totalSteps} (${percentage}%).</div>
+                <p class="mt-4 text-base text-center italic text-indigo-700">${storyMessage}</p>
+                ${debriefHtml}`;
+            questionContainer.classList.add('hidden');
+            choicesElement.innerHTML = '';
+            feedbackElement.classList.add('hidden');
+            nextButton.classList.add('hidden');
+            restartButton.classList.remove('hidden');
+            scenarioDescriptionElement.classList.remove('slide-in');
+            void scenarioDescriptionElement.offsetWidth;
+            scenarioDescriptionElement.classList.add('slide-in');
+        }
+
+         function getTotalSteps() {
+            return scenarios.reduce((total, scenario) => total + (scenario.steps ? scenario.steps.length : 0), 0);
+         }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+             getElements();
+             startGame();
+        });
+    </script>
+
+</body>
+</html>
